@@ -1,4 +1,4 @@
-from notestock.dataset import StockDownload
+from funstock.dataset import StockDownload
 
 root = '/Users/new/workspace/MyDiary/tmp/stocks/'
 root = '/root/workspace/temp/stocks/'

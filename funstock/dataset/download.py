@@ -5,7 +5,7 @@ import time
 import baostock as bs
 import pandas as pd
 import tushare as ts
-from notestock.dataset.dataset import (QuotationDay, QuotationMin1,
+from funstock.dataset.dataset import (QuotationDay, QuotationMin1,
                                        QuotationMin5, QuotationMin15,
                                        QuotationMin30, QuotationMin60,
                                        StockBasic)

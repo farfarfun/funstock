@@ -1,4 +1,4 @@
-from notestock.dataset import StockDownload
+from funstock.dataset import StockDownload
 
 for year in range(2010, 2020):
     #year = 2019
