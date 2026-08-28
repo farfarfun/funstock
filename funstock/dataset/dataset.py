@@ -1,6 +1,6 @@
 import os
 
-from notedata.tables import SqliteTable
+from fundata.tables import SqliteTable
 
 
 class StockBasic(SqliteTable):

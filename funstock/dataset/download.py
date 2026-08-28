@@ -9,7 +9,7 @@ from funstock.dataset.dataset import (QuotationDay, QuotationMin1,
                                        QuotationMin5, QuotationMin15,
                                        QuotationMin30, QuotationMin60,
                                        StockBasic)
-from notetool import log
+from funtool.log import log
 from tqdm import tqdm
 
 logger = log("stock")
