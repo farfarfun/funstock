@@ -1,15 +1,39 @@
-# Changelog
+# 变更日志
 
-## Unreleased
+## 0.2.10 - 2026-09-21
 
-### Breaking
+### 新增
 
-- Renamed the source package / import name / PyPI distribution name from
-  `notestock` to `funstock` to match the GitHub repository name (already
-  renamed from `notestock` to `funstock` previously). Update any code using
-  `import notestock` / `from notestock...` to `import funstock` / `from
-  funstock...`.
-  - `notestock` was never actually published to PyPI (confirmed 404), so
-    there is no old-package forwarding release needed — this is a clean
-    rename with no compatibility shim.
-  - Part of farfarfun/todo-list#299.
+- 增加根级 API 测试和公开图表计算函数导出。
+
+### 修复
+
+- 修复包结构、图表模块命名和 README 导入路径。
+- 下载失败改为有限重试并保留带股票代码和日期的错误上下文。
+
+### 变更
+
+- 使用 `src/funstock/` 布局、uv 锁文件和 `funtable` SQLite 基类。
+- 统一使用 `farlog`，并补齐运行时依赖版本下限。
+
+### 废弃
+
+- 无。
+
+## 0.2.9
+
+### 新增
+
+- 延续此前行情下载与 K 线图功能。
+
+### 修复
+
+- 无。
+
+### 变更
+
+- 无。
+
+### 废弃
+
+- 无。

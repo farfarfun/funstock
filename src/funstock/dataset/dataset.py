@@ -1,6 +1,40 @@
 import os
+import sqlite3
+from typing import Any
 
-from fundata.tables import SqliteTable
+from funtable.kv.sqlite_table import SQLiteTableBase
+
+
+class SqliteTable(SQLiteTableBase):
+    """为现有行情表提供 funtable SQLite 基类的列式兼容操作。"""
+
+    def __init__(self, db_path: str, table_name: str, *args: Any, **kwargs: Any) -> None:
+        del args, kwargs
+        super().__init__(db_path)
+        self.table_name = table_name
+        self.columns: list[str] = []
+
+    @property
+    def conn(self) -> sqlite3.Connection:
+        """返回当前线程的 SQLite 连接。"""
+        return self.connection
+
+    def execute(self, sql: str) -> sqlite3.Cursor:
+        """执行建表或其他 SQL。"""
+        return self._execute(sql)
+
+    def insert_list(self, rows: list[dict[str, Any]]) -> None:
+        """批量插入行情记录。"""
+        if not rows:
+            return
+        columns = [column for column in self.columns if column in rows[0]]
+        placeholders = ", ".join("?" for _ in columns)
+        sql = f"INSERT OR REPLACE INTO {self.table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+        self._executemany(sql, [tuple(row.get(column) for column in columns) for row in rows])
+
+    def vacuum(self) -> None:
+        """整理 SQLite 数据库。"""
+        self._execute("VACUUM")
 
 
 class StockBasic(SqliteTable):

@@ -10,11 +10,17 @@ import time
 
 import pymysql.cursors
 import tushare as ts
+from farlog import getLogger
+
+logger = getLogger("funstock")
 
 
 class DatabaseStock:
-    def __init__(self, connection, pro=ts.pro_api()):
-        self.pro = pro
+    """操作 MySQL 中的股票行情表。"""
+
+    def __init__(self, connection: object, pro: object | None = None) -> None:
+        """初始化连接和可选的 Tushare Pro 客户端。"""
+        self.pro = pro or ts.pro_api()
         self.connect = connection
 
     def stock_basic_create(self):
@@ -40,8 +46,9 @@ class DatabaseStock:
         	"""
                 cursor.execute(sql)
             self.connect.commit()
-        except Exception as e:
-            print(e)
+        except Exception:
+            logger.exception("创建 stock_basic 表失败")
+            raise
 
     def stock_basic_updated_data(self):
         try:
@@ -57,8 +64,9 @@ class DatabaseStock:
                     cursor.execute(sql, tuple(line))
 
             self.connect.commit()
-        except Exception as e:
-            print(e)
+        except Exception:
+            logger.exception("更新 stock_basic 数据失败")
+            raise
 
     def stock_daily_create(self):
         try:
@@ -82,8 +90,9 @@ class DatabaseStock:
                 # ['ts_code', 'trade_time', 'open', 'high', 'low', 'close', 'vol', 'amount', 'trade_date', 'pre_close']
                 cursor.execute(sql)
             self.connect.commit()
-        except Exception as e:
-            print(e)
+        except Exception:
+            logger.exception("创建 stock_daily 表失败")
+            raise
 
     def stock_daily_updated_one(self, ts_code='000001.SH', start_date='20150101', end_date='20190405', freq='D'):
         total_line = 0
@@ -111,10 +120,11 @@ class DatabaseStock:
                     cursor.execute(sql, tuple(line))
                 total_line = len(data.values)
 
-                print("{} from {} to {} {} Done".format(ts_code, start_date, end_date, total_line))
+                logger.info("{} from {} to {} {} Done", ts_code, start_date, end_date, total_line)
             self.connect.commit()
-        except Exception as e:
-            print(e)
+        except Exception:
+            logger.exception("更新股票日线失败：{}", ts_code)
+            raise
         return total_line
 
     def stock_daily_updated_all(self, start_date='20150101', end_date='20190405', freq='5min'):
@@ -144,8 +154,9 @@ class DatabaseStock:
                 # ['ts_code', 'trade_time', 'open', 'high', 'low', 'close', 'vol', 'amount', 'trade_date', 'pre_close']
                 cursor.execute(sql)
             self.connect.commit()
-        except Exception as e:
-            print(e)
+        except Exception:
+            logger.exception("创建分钟线表失败")
+            raise
 
     def stock_min_updated_one(self, ts_code='000001.SH', start_date='20150101', end_date='20190405', freq='5min'):
         total_line = 0
@@ -172,10 +183,11 @@ class DatabaseStock:
                     cursor.execute(sql, tuple(line))
                 total_line = len(data.values)
 
-                print("{} from {} to {} {} Done".format(ts_code, start_date, end_date, total_line))
+                logger.info("{} from {} to {} {} Done", ts_code, start_date, end_date, total_line)
             self.connect.commit()
-        except Exception as e:
-            print(e)
+        except Exception:
+            logger.exception("更新股票分钟线失败：{}", ts_code)
+            raise
         return total_line
 
     def stock_min_updated_all(self, start_date='20150101', end_date='20190405', freq='5min'):
@@ -185,23 +197,25 @@ class DatabaseStock:
             self.stock_min_updated_one(ts_code=ts_code, start_date=start_date, end_date=end_date, freq=freq)
 
 
-token = os.environ.get('TUSHARE_TOKEN')
-if not token:
-    raise RuntimeError('缺少 tushare token，请设置环境变量 TUSHARE_TOKEN')
-ts.set_token(token)
+def connect_from_environment() -> DatabaseStock:
+    """根据环境变量创建 MySQL 行情数据库对象。"""
+    token = os.environ.get("TUSHARE_TOKEN")
+    if not token:
+        raise RuntimeError("缺少 tushare token，请设置环境变量 TUSHARE_TOKEN")
+    password = os.environ.get("STOCK_MYSQL_PASSWORD")
+    if password is None:
+        raise RuntimeError("缺少 STOCK_MYSQL_PASSWORD 环境变量")
+    ts.set_token(token)
+    connection = pymysql.connect(
+        host=os.environ.get("STOCK_MYSQL_HOST", "localhost"),
+        user=os.environ.get("STOCK_MYSQL_USER", "root"),
+        password=password,
+        db=os.environ.get("STOCK_MYSQL_DB", "stock"),
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor,
+    )
+    return DatabaseStock(connection=connection)
 
-connect = pymysql.connect(host=os.environ.get('STOCK_MYSQL_HOST', 'localhost'),
-                          user=os.environ.get('STOCK_MYSQL_USER', 'root'),
-                          password=os.environ['STOCK_MYSQL_PASSWORD'],
-                          db=os.environ.get('STOCK_MYSQL_DB', 'stock'),
-                          charset='utf8mb4',
-                          cursorclass=pymysql.cursors.DictCursor)
 
-df = DatabaseStock(connection=connect)
-
-# df.stock_basic_create()
-# df.stock_basic_updated_data()
-#
-# df.stock_daily_create()
-# df.stock_daily_updated_one()
-df.stock_daily_updated_all(freq='D', end_date="")
+if __name__ == "__main__":
+    connect_from_environment().stock_daily_updated_all(freq="D", end_date="")

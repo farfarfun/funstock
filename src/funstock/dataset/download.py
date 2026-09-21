@@ -9,14 +9,22 @@ from funstock.dataset.dataset import (QuotationDay, QuotationMin1,
                                        QuotationMin5, QuotationMin15,
                                        QuotationMin30, QuotationMin60,
                                        StockBasic)
-from funtool.log import log
+from farlog import getLogger
 from tqdm import tqdm
 
-logger = log("stock")
+logger = getLogger("funstock")
+MAX_RETRIES = 3
+
+
+class StockDownloadError(RuntimeError):
+    """行情下载在有限重试后仍失败。"""
 
 
 class StockDownload:
-    def __init__(self, db_path=None):
+    """下载并保存股票行情数据。"""
+
+    def __init__(self, db_path: str | None = None) -> None:
+        """初始化数据库、Tushare 和 Baostock 客户端。"""
         if db_path is None:
             db_path = os.path.abspath(
                 os.path.dirname(__file__)) + '/data/stock.db'
@@ -38,27 +46,25 @@ class StockDownload:
         self.quotation_day.create()
         self.basic.create()
 
-        # 登陆系统 ####
         lg = bs.login()
-        # 显示登陆返回信息
-        print('login respond error_code:' + lg.error_code)
-        print('login respond  error_msg:' + lg.error_msg)
+        logger.info("baostock 登录：{} {}", lg.error_code, lg.error_msg)
 
-    def insert_basic(self):
+    def insert_basic(self) -> None:
+        """更新股票基本信息。"""
         stock_info = self.pro.stock_basic(exchange='', list_status='L')
         response = self.basic.insert_list(
             list(stock_info.to_dict(orient='index').values()))
         logger.info("update stock info {} rows {}".format(
             len(stock_info), response))
 
-    def _insert_day_tushare(self, ts_code, start_date='20000901', end_date='20211011'):
-        while True:
+    def _insert_day_tushare(self, ts_code: str, start_date: str = '20000901', end_date: str = '20211011') -> None:
+        """下载单只股票日线数据，失败时有限重试。"""
+        for attempt in range(1, MAX_RETRIES + 1):
             try:
                 df = ts.pro_bar(api=self.pro, ts_code=ts_code, asset='E', freq='d', start_date=start_date,
                                 end_date=end_date)
                 if df is None:
-                    time.sleep(10)
-                    continue
+                    raise StockDownloadError(f"Tushare 未返回数据：{ts_code}")
                 df['trade_time'] = df['trade_date']
                 df = df.rename(columns={
                     'trade_date': 'date',
@@ -69,7 +75,10 @@ class StockDownload:
                     list(df.to_dict(orient='index').values()))
                 break
             except Exception as e:
-                time.sleep(10)
+                if attempt == MAX_RETRIES:
+                    raise StockDownloadError(f"日线下载失败：{ts_code}，日期 {start_date}-{end_date}") from e
+                logger.warning("日线下载重试 {}/{}：{}", attempt, MAX_RETRIES, ts_code)
+                time.sleep(attempt)
         self.quotation_day.vacuum()
 
     def insert_day_all_tushare(self, start_date='20000901', end_date='20211011'):
@@ -86,7 +95,7 @@ class StockDownload:
             ts_code, start_date=start_date, end_date=end_date)
         self.quotation_day.vacuum()
 
-    def _insert_min_bao_stock(self, ts_code, start_date='20000901', end_date='20211011', frequency="5"):
+    def _insert_min_bao_stock(self, ts_code: str, start_date: str = '20000901', end_date: str = '20211011', frequency: str = "5") -> None:
         fields = "date,time,code,open,high,low,close,volume,amount"
         if frequency == '1':
             quotation = self.quotation_min1
@@ -99,9 +108,9 @@ class StockDownload:
         elif frequency == '60':
             quotation = self.quotation_min60
         else:
-            raise Exception('error frequency')
+            raise ValueError(f"不支持的分钟频率：{frequency}")
 
-        while True:
+        for attempt in range(1, MAX_RETRIES + 1):
             try:
                 code = ts_code.lower().split('.')
                 code = '{}.{}'.format(code[1], code[0])
@@ -114,20 +123,20 @@ class StockDownload:
                 df = pd.DataFrame(rs.get_data(), columns=rs.fields)
 
                 if rs.error_code != '0':
-                    logger.error('query_history_k_data_plus respond error_code:{},error_msg:{}'.format(
-                        rs.error_code, rs.error_msg))
-                    continue
+                    raise StockDownloadError(f"Baostock 查询失败：{ts_code}，{rs.error_msg}")
 
                 if df is None:
-                    time.sleep(10)
-                    continue
+                    raise StockDownloadError(f"Baostock 未返回数据：{ts_code}")
 
                 df['ts_code'] = ts_code
                 quotation.insert_list(
                     list(df.to_dict(orient='index').values()))
                 break
             except Exception as e:
-                time.sleep(10)
+                if attempt == MAX_RETRIES:
+                    raise StockDownloadError(f"分钟线下载失败：{ts_code}，频率 {frequency}") from e
+                logger.warning("分钟线下载重试 {}/{}：{}", attempt, MAX_RETRIES, ts_code)
+                time.sleep(attempt)
         quotation.vacuum()
         
 

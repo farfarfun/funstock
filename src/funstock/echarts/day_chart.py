@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import Any
 
 import requests
 import tushare as ts
@@ -6,10 +6,11 @@ from pyecharts import options as opts
 from pyecharts.charts import Kline, Line, Bar, Grid
 
 
-def split_data(data):
-    category_data = []
-    values = []
-    volumes = []
+def split_data(data: list[list[Any]]) -> dict[str, list[Any]]:
+    """拆分 K 线原始行，返回分类、数值和成交量数据。"""
+    category_data: list[Any] = []
+    values: list[list[Any]] = []
+    volumes: list[list[Any]] = []
 
     for i in range(len(data)):
         category_data.append(data[i][0])
@@ -18,10 +19,13 @@ def split_data(data):
     return {"categoryData": category_data, "values": values, "volumes": volumes}
 
 
-def calculate_ma(day_count: int, data):
-    result: List[Union[float, str]] = []
+def calculate_ma(day_count: int, data: dict[str, list[list[Any]]]) -> list[float | str]:
+    """计算指定窗口的移动平均线。"""
+    if day_count < 1:
+        raise ValueError("day_count 必须大于 0")
+    result: list[float | str] = []
     for i in range(len(data["values"])):
-        if i < day_count:
+        if i < day_count - 1:
             result.append("-")
             continue
         sum_total = 0.0
@@ -32,7 +36,10 @@ def calculate_ma(day_count: int, data):
 
 
 class DayChart:
-    def __init__(self, token=None):
+    """使用 Tushare 数据生成股票日线 K 线图。"""
+
+    def __init__(self, token: str | None = None) -> None:
+        """初始化数据客户端和默认日期范围。"""
 
         if token is not None:
             ts.set_token(token)
@@ -45,7 +52,8 @@ class DayChart:
         self.start_date = '20190801'
         self.end_date = '20191010'
 
-    def init_data(self, ts_code=None):
+    def init_data(self, ts_code: str | None = None) -> None:
+        """加载示例或指定股票的行情数据。"""
 
         if ts_code is None:
             response = requests.get(
@@ -68,7 +76,8 @@ class DayChart:
             self.chart_data = split_data(data=json_response)
             return
 
-    def draw_charts(self):
+    def draw_charts(self) -> Any:
+        """根据已加载数据生成组合图表。"""
         kline_data = [data[1:-1] for data in self.chart_data["values"]]
         kline = (
             Kline()
@@ -236,7 +245,8 @@ class DayChart:
 
         return grid_chart  # .render("professional_kline_brush.html")
 
-    def get_chart(self, ts_code=None):
+    def get_chart(self, ts_code: str | None = None) -> Any:
+        """加载数据并返回组合图表。"""
         self.init_data(ts_code)
 
         grid_chart = self.draw_charts()
