@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from os import PathLike
 from typing import Any
 
 from funtable.kv.sqlite_table import SQLiteTableBase
@@ -38,7 +39,11 @@ class SqliteTable(SQLiteTableBase):
 
 
 class StockBasic(SqliteTable):
-    def __init__(self, table_name='stock_basic', db_path=None, *args, **kwargs):
+    """存储股票基本信息的 SQLite 表。"""
+
+    def __init__(self, table_name: str = 'stock_basic', db_path: str | PathLike[str] | None = None,
+                 *args: Any, **kwargs: Any) -> None:
+        """初始化表；参数为表名、数据库路径及基类扩展参数，无返回值。"""
         if db_path is None:
             db_path = os.path.abspath(
                 os.path.dirname(__file__)) + '/data/stock.db'
@@ -49,7 +54,8 @@ class StockBasic(SqliteTable):
                         'curr_type', 'list_status', 'list_date', 'delist_date', 'is_hs'
                         ]
 
-    def create(self):
+    def create(self) -> None:
+        """创建股票基本信息表，无参数和返回值。"""
         self.execute("""
                 create table if not exists {} (
                  ts_code       VARCHAR(255)
@@ -72,7 +78,11 @@ class StockBasic(SqliteTable):
 
 
 class QuotationDay(SqliteTable):
-    def __init__(self, table_name='quotation_day', db_path=None, *args, **kwargs):
+    """存储股票日线行情的 SQLite 表。"""
+
+    def __init__(self, table_name: str = 'quotation_day', db_path: str | PathLike[str] | None = None,
+                 *args: Any, **kwargs: Any) -> None:
+        """初始化表；参数为表名、数据库路径及基类扩展参数，无返回值。"""
         if db_path is None:
             db_path = os.path.abspath(
                 os.path.dirname(__file__)) + '/data/stock.db'
@@ -82,7 +92,8 @@ class QuotationDay(SqliteTable):
         self.columns = ['ts_code', 'date', 'time', 'open', 'high',
                         'low', 'close', 'volume', 'amount', 'pre_close']
 
-    def create(self):
+    def create(self) -> None:
+        """创建日线行情表，无参数和返回值。"""
         self.execute("""
             create table if not exists {} (
                ts_code       VARCHAR(255)
@@ -101,7 +112,11 @@ class QuotationDay(SqliteTable):
 
 
 class QuotationMin(SqliteTable):
-    def __init__(self, table_name='quotation_min', db_path=None, *args, **kwargs):
+    """存储股票分钟行情的 SQLite 表。"""
+
+    def __init__(self, table_name: str = 'quotation_min', db_path: str | PathLike[str] | None = None,
+                 *args: Any, **kwargs: Any) -> None:
+        """初始化并创建表；参数为表名、数据库路径及基类扩展参数，无返回值。"""
         if db_path is None:
             db_path = os.path.abspath(
                 os.path.dirname(__file__)) + '/data/stock.db'
@@ -112,7 +127,8 @@ class QuotationMin(SqliteTable):
                         'high', 'low', 'close', 'volume', 'amount']
         self.create()
 
-    def create(self):
+    def create(self) -> None:
+        """创建分钟行情表，无参数和返回值。"""
         self.execute("""
             create table if not exists {} (
                ts_code       VARCHAR(255)
@@ -130,37 +146,56 @@ class QuotationMin(SqliteTable):
 
 
 class QuotationMin1(QuotationMin):
-    def __init__(self, table_name='quotation_min1',  *args, **kwargs):
+    """存储一分钟行情的 SQLite 表。"""
+
+    def __init__(self, table_name: str = 'quotation_min1', *args: Any, **kwargs: Any) -> None:
+        """初始化一分钟行情表；参数为表名及基类扩展参数，无返回值。"""
         super(QuotationMin1, self).__init__(
             table_name=table_name, *args, **kwargs)
 
 
 class QuotationMin5(QuotationMin):
-    def __init__(self, table_name='quotation_min5',  *args, **kwargs):
+    """存储五分钟行情的 SQLite 表。"""
+
+    def __init__(self, table_name: str = 'quotation_min5', *args: Any, **kwargs: Any) -> None:
+        """初始化五分钟行情表；参数为表名及基类扩展参数，无返回值。"""
         super(QuotationMin5, self).__init__(
             table_name=table_name, *args, **kwargs)
 
 
 class QuotationMin15(QuotationMin):
-    def __init__(self, table_name='quotation_min15',  *args, **kwargs):
+    """存储十五分钟行情的 SQLite 表。"""
+
+    def __init__(self, table_name: str = 'quotation_min15', *args: Any, **kwargs: Any) -> None:
+        """初始化十五分钟行情表；参数为表名及基类扩展参数，无返回值。"""
         super(QuotationMin15, self).__init__(
             table_name=table_name, *args, **kwargs)
 
 
 class QuotationMin30(QuotationMin):
-    def __init__(self, table_name='quotation_min30',  *args, **kwargs):
+    """存储三十分钟行情的 SQLite 表。"""
+
+    def __init__(self, table_name: str = 'quotation_min30', *args: Any, **kwargs: Any) -> None:
+        """初始化三十分钟行情表；参数为表名及基类扩展参数，无返回值。"""
         super(QuotationMin30, self).__init__(
             table_name=table_name, *args, **kwargs)
 
 
 class QuotationMin60(QuotationMin):
-    def __init__(self, table_name='quotation_min60',  *args, **kwargs):
+    """存储六十分钟行情的 SQLite 表。"""
+
+    def __init__(self, table_name: str = 'quotation_min60', *args: Any, **kwargs: Any) -> None:
+        """初始化六十分钟行情表；参数为表名及基类扩展参数，无返回值。"""
         super(QuotationMin60, self).__init__(
             table_name=table_name, *args, **kwargs)
 
 
 class TradeDetail(SqliteTable):
-    def __init__(self, table_name='trade_detail', db_path=None, *args, **kwargs):
+    """存储逐笔成交明细的 SQLite 表。"""
+
+    def __init__(self, table_name: str = 'trade_detail', db_path: str | PathLike[str] | None = None,
+                 *args: Any, **kwargs: Any) -> None:
+        """初始化表；参数为表名、数据库路径及基类扩展参数，无返回值。"""
         if db_path is None:
             db_path = os.path.abspath(
                 os.path.dirname(__file__)) + '/data/stock.db'
@@ -170,7 +205,8 @@ class TradeDetail(SqliteTable):
         self.columns = ['ts_code', 'trade_date', 'trade_time',
                         'price', 'price_mod', 'vol', 'amount']
 
-    def create(self):
+    def create(self) -> None:
+        """创建逐笔成交明细表，无参数和返回值。"""
         self.execute("""
             create table if not exists {} (
                ts_code       VARCHAR(255)

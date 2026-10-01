@@ -1,6 +1,7 @@
 # coding=utf-8
 import os
 import time
+from os import PathLike
 
 import baostock as bs
 import pandas as pd
@@ -23,8 +24,8 @@ class StockDownloadError(RuntimeError):
 class StockDownload:
     """下载并保存股票行情数据。"""
 
-    def __init__(self, db_path: str | None = None) -> None:
-        """初始化数据库、Tushare 和 Baostock 客户端。"""
+    def __init__(self, db_path: str | PathLike[str] | None = None) -> None:
+        """初始化下载器；参数为可选数据库路径，无返回值。"""
         if db_path is None:
             db_path = os.path.abspath(
                 os.path.dirname(__file__)) + '/data/stock.db'
@@ -50,7 +51,7 @@ class StockDownload:
         logger.info("baostock 登录：{} {}", lg.error_code, lg.error_msg)
 
     def insert_basic(self) -> None:
-        """更新股票基本信息。"""
+        """从 Tushare 下载并写入股票基本信息，无参数和返回值。"""
         stock_info = self.pro.stock_basic(exchange='', list_status='L')
         response = self.basic.insert_list(
             list(stock_info.to_dict(orient='index').values()))
@@ -58,7 +59,7 @@ class StockDownload:
             len(stock_info), response))
 
     def _insert_day_tushare(self, ts_code: str, start_date: str = '20000901', end_date: str = '20211011') -> None:
-        """下载单只股票日线数据，失败时有限重试。"""
+        """下载指定代码和日期范围的日线数据并写库，无返回值。"""
         for attempt in range(1, MAX_RETRIES + 1):
             try:
                 df = ts.pro_bar(api=self.pro, ts_code=ts_code, asset='E', freq='d', start_date=start_date,
@@ -81,7 +82,8 @@ class StockDownload:
                 time.sleep(attempt)
         self.quotation_day.vacuum()
 
-    def insert_day_all_tushare(self, start_date='20000901', end_date='20211011'):
+    def insert_day_all_tushare(self, start_date: str = '20000901', end_date: str = '20211011') -> None:
+        """下载数据库中全部股票在指定日期范围的日线数据，无返回值。"""
         info = pd.read_sql(
             'select * from {}'.format(self.basic.table_name), self.basic.conn)
 
@@ -90,12 +92,15 @@ class StockDownload:
                 ts_code, start_date=start_date, end_date=end_date)
         self.quotation_day.vacuum()
 
-    def insert_day_one_tushare(self, ts_code, start_date='20000901', end_date='20211011'):
+    def insert_day_one_tushare(self, ts_code: str, start_date: str = '20000901',
+                                end_date: str = '20211011') -> None:
+        """下载指定股票和日期范围的日线数据，无返回值。"""
         self._insert_day_tushare(
             ts_code, start_date=start_date, end_date=end_date)
         self.quotation_day.vacuum()
 
     def _insert_min_bao_stock(self, ts_code: str, start_date: str = '20000901', end_date: str = '20211011', frequency: str = "5") -> None:
+        """下载指定股票、日期范围和频率的分钟数据并写库，无返回值。"""
         fields = "date,time,code,open,high,low,close,volume,amount"
         if frequency == '1':
             quotation = self.quotation_min1
@@ -140,7 +145,8 @@ class StockDownload:
         quotation.vacuum()
         
 
-    def insert_min_all_bao_stock(self, start_date='20000901', end_date='20211011'):
+    def insert_min_all_bao_stock(self, start_date: str = '20000901', end_date: str = '20211011') -> None:
+        """下载数据库中全部股票在指定日期范围的分钟数据，无返回值。"""
         info = pd.read_sql(
             'select * from {}'.format(self.basic.table_name), self.basic.conn)
         start_date = '{}-{}-{}'.format(start_date[:4],
@@ -152,7 +158,9 @@ class StockDownload:
                     ts_code, start_date, end_date, frequency=freq)
         self.quotation_min5.vacuum()
 
-    def insert_min_one_bao_stock(self, ts_code, start_date='20000901', end_date='20211011'):
+    def insert_min_one_bao_stock(self, ts_code: str, start_date: str = '20000901',
+                                 end_date: str = '20211011') -> None:
+        """下载指定股票和日期范围的常用分钟数据，无返回值。"""
         start_date = '{}-{}-{}'.format(start_date[:4],
                                        start_date[4:6], start_date[6:])
         end_date = '{}-{}-{}'.format(end_date[:4], end_date[4:6], end_date[6:])
@@ -162,7 +170,8 @@ class StockDownload:
                 ts_code, start_date, end_date, frequency=freq)
         self.quotation_min5.vacuum()
 
-    def save_year(self, year=2020):
+    def save_year(self, year: int = 2020) -> None:
+        """下载并保存指定年份的全部行情；参数为四位年份，无返回值。"""
         self.insert_basic()
         start_date = '{}0101'.format(year)
         end_date = '{}1231'.format(year)
@@ -170,7 +179,8 @@ class StockDownload:
         self.insert_day_all_tushare(start_date, end_date)
         self.quotation_day.vacuum()
 
-    def save_month(self, month=202001):
+    def save_month(self, month: int = 202001) -> None:
+        """下载并保存指定月份的全部行情；参数格式为 YYYYMM，无返回值。"""
         self.insert_basic()
         start_date = '{}01'.format(month)
         end_date = '{}31'.format(month)
@@ -178,14 +188,17 @@ class StockDownload:
         self.insert_day_all_tushare(start_date, end_date)
         self.quotation_day.vacuum()
 
-    def save_one(self, ts_code, start_date='20000901', end_date='20211011'):
+    def save_one(self, ts_code: str, start_date: str = '20000901', end_date: str = '20211011') -> None:
+        """下载并保存指定股票在日期范围内的全部行情，无返回值。"""
         self.insert_basic()
         self.insert_day_one_tushare(ts_code, start_date, end_date)
         self.insert_min_one_bao_stock(
             ts_code, start_date=start_date, end_date=end_date)
         self.quotation_day.vacuum()
 
-    def save_ones(self, path, start_date='20000101', end_date='20301231'):
+    def save_ones(self, path: str | PathLike[str], start_date: str = '20000101',
+                  end_date: str = '20301231') -> None:
+        """按股票分别保存行情；参数为目录和日期范围，无返回值。"""
         self.insert_basic()
         info = pd.read_sql(
             'select * from {}'.format(self.basic.table_name), self.basic.conn)
@@ -195,6 +208,6 @@ class StockDownload:
             stock = StockDownload(db_path=db_path)
             stock.save_one(ts_code, start_date=start_date, end_date=end_date)
 
-    def release(self):
-        # 登出系统 #
+    def release(self) -> None:
+        """退出 Baostock 会话，无参数和返回值。"""
         bs.logout()

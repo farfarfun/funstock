@@ -41,9 +41,16 @@ grid_chart = chart.get_chart(ts_code="000001.SZ")
 grid_chart.render("kline.html")
 ```
 
-## 现状说明
+## 批量下载
 
-`funstock/analyse/manage.py` 依赖 `keras_bert`，与股票数据下载/图表功能无关，是未完成的遗留代码。`example/huobi_Python/` 是 vendored 的火币交易所 SDK 示例，与本项目主功能（股票行情）无关。
+批量下载脚本要求通过命令行参数或环境变量指定数据目录：
+
+```bash
+python -m funstock.dataset.run --root ./stocks year
+# 或 export FUNSTOCK_DATA_DIR=./stocks
+```
+
+未完成且依赖未声明 `keras_bert` 的旧分析模块已移除。`example/huobi_Python/` 是 vendored 的火币交易所 SDK 示例，与本项目主功能（股票行情）无关。
 
 ---
 
