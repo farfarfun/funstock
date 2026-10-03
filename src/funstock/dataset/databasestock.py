@@ -23,7 +23,8 @@ class DatabaseStock:
         self.pro = pro or ts.pro_api()
         self.connect = connection
 
-    def stock_basic_create(self):
+    def stock_basic_create(self) -> None:
+        """创建 `stock_basic` 股票基本信息表（已存在则跳过），无参数和返回值。"""
         try:
             with self.connect.cursor() as cursor:
                 sql = """CREATE TABLE IF NOT EXISTS stock_basic (
@@ -50,7 +51,8 @@ class DatabaseStock:
             logger.exception("创建 stock_basic 表失败")
             raise
 
-    def stock_basic_updated_data(self):
+    def stock_basic_updated_data(self) -> None:
+        """从 Tushare 拉取全量上市股票基本信息并写入/覆盖 `stock_basic` 表，无参数和返回值。"""
         try:
             with self.connect.cursor() as cursor:
                 fields = "ts_code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_status,list_date,delist_date,is_hs"
@@ -68,7 +70,8 @@ class DatabaseStock:
             logger.exception("更新 stock_basic 数据失败")
             raise
 
-    def stock_daily_create(self):
+    def stock_daily_create(self) -> None:
+        """创建 `stock_daily` 日线行情表（已存在则跳过），无参数和返回值。"""
         try:
             with self.connect.cursor() as cursor:
                 # Create a new record
@@ -94,7 +97,18 @@ class DatabaseStock:
             logger.exception("创建 stock_daily 表失败")
             raise
 
-    def stock_daily_updated_one(self, ts_code='000001.SH', start_date='20150101', end_date='20190405', freq='D'):
+    def stock_daily_updated_one(
+        self,
+        ts_code: str = '000001.SH',
+        start_date: str = '20150101',
+        end_date: str = '20190405',
+        freq: str = 'D',
+    ) -> int:
+        """下载单只股票指定日期范围的日线行情并写入 `stock_daily` 表。
+
+        参数：ts_code 股票代码；start_date/end_date 起止日期（YYYYMMDD，end_date 为空则取今天）；
+        freq Tushare 频率代码。返回值：实际写入的行数，无数据或失败时返回 0。
+        """
         total_line = 0
         try:
             end_date = end_date or time.strftime("%Y%m%d", time.localtime())
@@ -127,17 +141,20 @@ class DatabaseStock:
             raise
         return total_line
 
-    def stock_daily_updated_all(self, start_date='20150101', end_date='20190405', freq='5min'):
+    def stock_daily_updated_all(self, start_date: str = '20150101', end_date: str = '20190405',
+                                 freq: str = '5min') -> None:
+        """遍历全部上市股票并逐个更新 `stock_daily` 日线行情，无返回值。"""
         data = self.pro.stock_basic(exchange='', list_status='L', fields="ts_code")
         for line in data.values:
             ts_code = line[0]
             self.stock_daily_updated_one(ts_code=ts_code, start_date=start_date, end_date=end_date, freq=freq)
 
-    def stock_min_create(self):
+    def stock_min_create(self) -> None:
+        """创建 `stock_min` 分钟线行情表（已存在则跳过），无参数和返回值。"""
         try:
             with self.connect.cursor() as cursor:
                 # Create a new record
-                sql = """CREATE TABLE IF NOT EXISTS stock_daily (
+                sql = """CREATE TABLE IF NOT EXISTS stock_min (
                ts_code       VARCHAR(255) COMMENT 'TS代码'
               ,trade_time    VARCHAR(255) COMMENT '交易时间'
               ,open          FLOAT        COMMENT '开盘价'
@@ -158,14 +175,25 @@ class DatabaseStock:
             logger.exception("创建分钟线表失败")
             raise
 
-    def stock_min_updated_one(self, ts_code='000001.SH', start_date='20150101', end_date='20190405', freq='5min'):
+    def stock_min_updated_one(
+        self,
+        ts_code: str = '000001.SH',
+        start_date: str = '20150101',
+        end_date: str = '20190405',
+        freq: str = '5min',
+    ) -> int:
+        """下载单只股票指定日期范围的分钟线行情并写入 `stock_min` 表。
+
+        参数：ts_code 股票代码；start_date/end_date 起止日期（YYYYMMDD，end_date 为空则取今天）；
+        freq Tushare 分钟频率代码。返回值：实际写入的行数，无数据或失败时返回 0。
+        """
         total_line = 0
         try:
             end_date = end_date or time.strftime("%Y%m%d", time.localtime())
             with self.connect.cursor() as cursor:
                 fields = "ts_code,trade_time,open,high,low,close,vol,amount,trade_date,pre_close"
                 param2 = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s'
-                sql = 'REPLACE INTO stock_daily ({}) VALUES ({})'.format(fields, param2)
+                sql = 'REPLACE INTO stock_min ({}) VALUES ({})'.format(fields, param2)
 
                 data = ts.pro_bar(api=self.pro, ts_code=ts_code, asset='E', freq=freq, start_date=start_date,
                                   end_date=end_date)
@@ -190,7 +218,9 @@ class DatabaseStock:
             raise
         return total_line
 
-    def stock_min_updated_all(self, start_date='20150101', end_date='20190405', freq='5min'):
+    def stock_min_updated_all(self, start_date: str = '20150101', end_date: str = '20190405',
+                               freq: str = '5min') -> None:
+        """遍历全部上市股票并逐个更新 `stock_min` 分钟线行情，无返回值。"""
         data = self.pro.stock_basic(exchange='', list_status='L', fields="ts_code")
         for line in data.values:
             ts_code = line[0]

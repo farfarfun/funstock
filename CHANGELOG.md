@@ -1,5 +1,24 @@
 # 变更日志
 
+## 未发布
+
+### 新增
+
+- 为 `DatabaseStock` 的公开方法补齐类型标注和中文 docstring，并新增覆盖正常路径、空响应和环境变量校验的测试。
+
+### 修复
+
+- 修复 `DatabaseStock.stock_min_create`/`stock_min_updated_one` 误建表名/误写入 `stock_daily` 表的问题，分钟线数据改为正确写入 `stock_min` 表。
+- 移除 `example/huobi_ex.py` 中未定义变量 `a = c` 的死代码，access_key/secret_key 改为从环境变量读取。
+
+### 变更
+
+- README 补充 `example/huobi_Python` 的来源、原始协议（Apache License 2.0）和运行前置条件说明，新增 `example/huobi_Python/NOTICE.md`。
+
+### 废弃
+
+- 无。
+
 ## 0.2.10 - 2026-09-21
 
 ### 新增

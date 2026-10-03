@@ -1,3 +1,7 @@
+# 运行本示例前需单独安装火币官方 SDK：`uv pip install huobi_client`
+# 并通过环境变量提供账户密钥，不要把真实 access_key/secret_key 写进代码。
+import os
+
 from huobi.client.account import AccountClient
 from huobi.client.generic import CandlestickInterval, GenericClient
 from huobi.client.market import LogInfo, MarketClient
@@ -10,9 +14,8 @@ print(list_symbol[0])
 print(list_currency[0].print_object())
 
 
-a = c
-access_key = " "
-secret_key = " "
+access_key = os.environ.get("HUOBI_ACCESS_KEY", "")
+secret_key = os.environ.get("HUOBI_SECRET_KEY", "")
 
 # Create generic client instance and get the timestamp
 generic_client = GenericClient()

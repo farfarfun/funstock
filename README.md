@@ -50,7 +50,14 @@ python -m funstock.dataset.run --root ./stocks year
 # 或 export FUNSTOCK_DATA_DIR=./stocks
 ```
 
-未完成且依赖未声明 `keras_bert` 的旧分析模块已移除。`example/huobi_Python/` 是 vendored 的火币交易所 SDK 示例，与本项目主功能（股票行情）无关。
+未完成且依赖未声明 `keras_bert` 的旧分析模块已移除。
+
+## 第三方示例代码
+
+`example/huobi_Python/` 与 `example/huobi_ex.py` 是火币（Huobi）交易所 Python SDK 的用法示例，与本项目主功能（股票行情）无关，不是 funstock 的运行时依赖：
+
+- 来源：<https://github.com/HuobiRDCenter/huobi_Python>（原始协议 Apache License 2.0，版权归原作者所有，详见 `example/huobi_Python/NOTICE.md`）
+- 运行这些示例前需单独安装 `huobi_client`（`uv pip install huobi_client`），并通过环境变量 `HUOBI_ACCESS_KEY`/`HUOBI_SECRET_KEY` 提供账户密钥；`example/huobi_Python/example/` 下的脚本沿用上游仓库的 `g_api_key`/`g_secret_key` 占位写法，需要使用者自行补充后才能运行，示例中出现的 ID、密钥均为上游仓库自带的占位数据，不是真实凭据。
 
 ---
 

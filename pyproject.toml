@@ -31,3 +31,8 @@ packages = ["src/funstock"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff.lint]
+# farlog 用 `{}` 做参数化日志（类似 loguru），ruff 按 stdlib logging 的 `%s` 语法误报
+# PLE1205（参数过多），这是组织内已知的误报，不要改回 f-string（见 todo-list#695）。
+ignore = ["PLE1205"]
