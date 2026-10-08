@@ -1,7 +1,7 @@
 [project]
 name = "funstock"
 version = "0.2.10"
-description = "funstock"
+description = "A股行情数据工具包：基于 tushare/baostock 抓取日线与 1/5/15/30/60 分钟行情并落地 SQLite，附 pyecharts 日K线绘图"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
