@@ -57,7 +57,7 @@ python -m funstock.dataset.run --root ./stocks year
 `example/huobi_Python/` 与 `example/huobi_ex.py` 是火币（Huobi）交易所 Python SDK 的用法示例，与本项目主功能（股票行情）无关，不是 funstock 的运行时依赖：
 
 - 来源：<https://github.com/HuobiRDCenter/huobi_Python>（原始协议 Apache License 2.0，版权归原作者所有，详见 `example/huobi_Python/NOTICE.md`）
-- 运行这些示例前需单独安装 `huobi_client`（`uv pip install huobi_client`），并通过环境变量 `HUOBI_ACCESS_KEY`/`HUOBI_SECRET_KEY` 提供账户密钥；`example/huobi_Python/example/` 下的脚本沿用上游仓库的 `g_api_key`/`g_secret_key` 占位写法，需要使用者自行补充后才能运行，示例中出现的 ID、密钥均为上游仓库自带的占位数据，不是真实凭据。
+- `example/huobi_ex.py` 通过环境变量 `HUOBI_ACCESS_KEY`/`HUOBI_SECRET_KEY` 读取账户密钥。`example/huobi_Python/example/` 下的脚本沿用上游仓库的 `g_api_key`/`g_secret_key` 配置写法，需在安装的 `huobi_client` 中按其说明配置；生成子账户 API key 的示例还需设置 `HUOBI_OTP_TOKEN`。上述示例均需单独安装 `huobi_client`（`uv pip install huobi_client`），不是 funstock 的运行时依赖。
 
 ---
 

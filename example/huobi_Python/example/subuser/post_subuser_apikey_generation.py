@@ -1,9 +1,11 @@
+import os
+
 from huobi.client.subuser import SubuserClient
 from huobi.constant import *
 
 subuser_client = SubuserClient(api_key=g_api_key, secret_key=g_secret_key)
 
-otp_token = '746316'
+otp_token = os.environ["HUOBI_OTP_TOKEN"]
 sub_uid = 122946475
 note = "huobi_subuser"
 permission = 'readOnly'
